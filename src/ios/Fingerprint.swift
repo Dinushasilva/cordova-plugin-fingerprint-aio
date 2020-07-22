@@ -139,22 +139,9 @@ import LocalAuthentication
                     self.commandDelegate.send(pluginResult, callbackId:command.callbackId);
                 }
             );
-        } else if (error?.code == -8) {
-            authenticationContext.evaluatePolicy(
-                LAPolicy.deviceOwnerAuthentication,
-                localizedReason: reason,
-                reply: { [unowned self] (success, error) -> Void in
-                    if( success ) {
-                        pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Success");
-                    }else {
-                        pluginResult = self.handleError(error: error);
-                    }
-                    self.commandDelegate.send(pluginResult, callbackId:command.callbackId);
-                }
-            );
         } else {
             authenticationContext.evaluatePolicy(
-                policy,
+                LAPolicy.deviceOwnerAuthentication,
                 localizedReason: reason,
                 reply: { [unowned self] (success, error) -> Void in
                     if( success ) {
