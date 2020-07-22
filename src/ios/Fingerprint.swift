@@ -39,6 +39,10 @@ import LocalAuthentication
             errorResponse["message"] = error?.localizedDescription;
         }
 
+        if(error?.code == -8){
+            available = true;
+        }
+
         if (available == true) {
             if #available(iOS 11.0, *) {
                 switch(authenticationContext.biometryType) {
@@ -49,6 +53,10 @@ import LocalAuthentication
                 case .faceID:
                     biometryType = "face"
                 }
+            }
+
+            if(error?.code == -8){
+                biometryType = "passcode";
             }
 
             pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: biometryType);
@@ -97,6 +105,7 @@ import LocalAuthentication
         var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: errorResponse);
         var reason = "Authentication";
         var policy:LAPolicy = .deviceOwnerAuthentication;
+        var error:NSError?;
         let data  = command.arguments[0] as AnyObject?;
 
         if let disableBackup = data?["disableBackup"] as! Bool? {
@@ -117,18 +126,33 @@ import LocalAuthentication
             reason = description;
         }
 
-        authenticationContext.evaluatePolicy(
-            policy,
-            localizedReason: reason,
-            reply: { [unowned self] (success, error) -> Void in
-                if( success ) {
-                    pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Success");
-                }else {
-                    pluginResult = self.handleError(error: error);
+        if (authenticationContext.canEvaluatePolicy(LAPolicy.deviceOwnerAuthenticationWithBiometrics, error: &error)) {
+            authenticationContext.evaluatePolicy(
+                policy,
+                localizedReason: reason,
+                reply: { [unowned self] (success, error) -> Void in
+                    if( success ) {
+                        pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Success");
+                    }else {
+                        pluginResult = self.handleError(error: error);
+                    }
+                    self.commandDelegate.send(pluginResult, callbackId:command.callbackId);
                 }
-                self.commandDelegate.send(pluginResult, callbackId:command.callbackId);
-            }
-        );
+            );
+        } else {
+            authenticationContext.evaluatePolicy(
+                LAPolicy.deviceOwnerAuthentication,
+                localizedReason: reason,
+                reply: { [unowned self] (success, error) -> Void in
+                    if( success ) {
+                        pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Success");
+                    }else {
+                        pluginResult = self.handleError(error: error);
+                    }
+                    self.commandDelegate.send(pluginResult, callbackId:command.callbackId);
+                }
+            );
+        }
     }
 
     override func pluginInitialize() {
