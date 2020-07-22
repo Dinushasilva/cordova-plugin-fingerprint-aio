@@ -39,7 +39,7 @@ import LocalAuthentication
             errorResponse["message"] = error?.localizedDescription;
         }
 
-        if(error?.code == -8){
+        if(error?.code == -8 || error?.code == -6 || error?.code == -7){
             available = true;
         }
 
@@ -55,7 +55,7 @@ import LocalAuthentication
                 }
             }
 
-            if(error?.code == -8){
+            if(error?.code == -8 || error?.code == -6 || error?.code == -7){
                 biometryType = "passcode";
             }
 
