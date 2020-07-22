@@ -31,7 +31,7 @@ import LocalAuthentication
         var error:NSError?;
         let policy:LAPolicy = .deviceOwnerAuthenticationWithBiometrics;
         var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Not available");
-        let available = authenticationContext.canEvaluatePolicy(policy, error: &error);
+        var available = authenticationContext.canEvaluatePolicy(policy, error: &error);
 
         if(error != nil){
             biometryType = "none";
@@ -139,9 +139,22 @@ import LocalAuthentication
                     self.commandDelegate.send(pluginResult, callbackId:command.callbackId);
                 }
             );
-        } else {
+        } else if (error?.code == -8) {
             authenticationContext.evaluatePolicy(
                 LAPolicy.deviceOwnerAuthentication,
+                localizedReason: reason,
+                reply: { [unowned self] (success, error) -> Void in
+                    if( success ) {
+                        pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Success");
+                    }else {
+                        pluginResult = self.handleError(error: error);
+                    }
+                    self.commandDelegate.send(pluginResult, callbackId:command.callbackId);
+                }
+            );
+        } else {
+            authenticationContext.evaluatePolicy(
+                policy,
                 localizedReason: reason,
                 reply: { [unowned self] (success, error) -> Void in
                     if( success ) {
