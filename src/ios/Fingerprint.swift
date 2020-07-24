@@ -31,7 +31,7 @@ import LocalAuthentication
         var error:NSError?;
         let policy:LAPolicy = .deviceOwnerAuthenticationWithBiometrics;
         var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Not available");
-        var available = authenticationContext.canEvaluatePolicy(policy, error: &error);
+        var available = authenticationContext.canEvaluatePolicy(policy, error: &error) || authenticationContext.canEvaluatePolicy(LAPolicy.deviceOwnerAuthentication, error: &error);
 
         if(error != nil){
             biometryType = "none";
